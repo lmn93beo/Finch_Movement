@@ -1,0 +1,12 @@
+function processed = filter_path(raw, threshold)
+
+[~, distance] = find_speed(raw(:,1), raw(:,2), raw(:,3));
+
+% If any distance is > threshold, filter
+while sum(distance > threshold) > 0
+    idx = find(distance > threshold);
+    for i = 1 : length(idx)
+        distana
+    
+    
+
