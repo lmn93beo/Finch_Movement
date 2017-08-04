@@ -12,7 +12,7 @@ This repository contains:
 
 These MATLAB files are found in the [WebcamGUI folder](https://github.com/lmn93beo/Finch_Movement/tree/master/WebcamGUI).
 
-Instructions for use can be found [here]
+Instructions for use can be found [here](https://github.com/lmn93beo/Finch_Movement/blob/master/WebcamGUI/WebcamGUI_HELP.md)
 
 ### B. Analysis files:
 1. [Raw data analysis for individual animals](http://nbviewer.jupyter.org/github/lmn93beo/Finch_Movement/blob/master/Finch_Movement.ipynb)
@@ -25,4 +25,4 @@ The notebooks contain extensive guidance on usage.
 
 This material is released under an [MIT license](LICENSE) and thus you are free to re-use, modify, build-on, and enhance this material for any purpose.
 
-If you do use this material, I would appreciate a citation or attribution.
+If you do use this material, any citation or attribution would be greatly appreciated.
