@@ -22,7 +22,7 @@ function varargout = webcamGUI(varargin)
 
 % Edit the above text to modify the response to help webcamGUI
 
-% Last Modified by GUIDE v2.5 13-Jul-2016 12:46:03
+% Last Modified by GUIDE v2.5 09-Sep-2016 16:19:19
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -84,9 +84,17 @@ function start_pushbutton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global cam r_threshold g_threshold b_threshold finish debug
+global size_threshold
 
 root = get(handles.root_text, 'String');  %Root of file names
 framerate = 30; %fps
+
+choice = questdlg(['Start recording animal ' root ' ?'], ...
+	'Yes', 'No');
+
+if ~strcmp(choice, 'Yes')
+    error('User chose no');
+end
 
 % How many frames to record before writing to log
 BUFFER_SIZE = str2double(get(handles.buffersize_text, 'String')) ...
@@ -110,6 +118,7 @@ debug = 1;
 r_threshold = get(handles.red_slider, 'Value');
 g_threshold = get(handles.green_slider, 'Value');
 b_threshold = get(handles.blue_slider, 'Value');
+size_threshold = get(handles.size_slider, 'Value');
 
 % Set up a sound to be played
 fs = 44100;
@@ -119,8 +128,17 @@ if nsound > 0
 end
 
 while ~finish %toc < 30
+    passed = 0;
     % Capture a raw frame
-    img = snapshot(cam);
+    while ~passed
+        try
+            img = snapshot(cam);
+            passed = 1;
+        catch
+            disp('Error. Retrying...');
+            pause(10);
+        end
+    end
     img = imresize(img, 0.5);
     
     % Threshold
@@ -129,13 +147,17 @@ while ~finish %toc < 30
         img(:,:,3) < b_threshold;
     
     % Remove small areas
-    bw2 = bwareaopen(diff, 190, 8);
+    bw2 = bwareaopen(diff, ceil(size_threshold), 8);
  
     % Get centroid
     L = logical(bw2);
     s = regionprops(L, 'area', 'centroid');
     
     area_vector = [s.Area];
+    if debug ~= 0
+        set(handles.sizes_list, 'String', {sort(area_vector, 'descend')});
+    end
+    
     [tmp, idx] = max(area_vector);
     if ~isempty(tmp)
         centroids(i,:) = s(idx(1)).Centroid;
@@ -184,7 +206,7 @@ while ~finish %toc < 30
     drawnow;
 end
 
-clear cam
+%clear cam
 % Write the data one last time
 currtime = strrep(datestr(now), ':', '_');
 filename = [root '_' currtime '.csv']
@@ -423,6 +445,7 @@ global finish
 if ~finish
     cla;
     finish = true;
+    errordlg('Recording session has ended.', 'End of session')
 end
 
 
@@ -431,8 +454,78 @@ function debug_pushbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to debug_pushbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global debug;
+global debug finish;
 if ~finish
     cla;
     debug = mod(debug + 1, 3);
+end
+
+
+
+function sizeslider_text_Callback(hObject, eventdata, handles)
+% hObject    handle to sizeslider_text (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of sizeslider_text as text
+%        str2double(get(hObject,'String')) returns contents of sizeslider_text as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function sizeslider_text_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to sizeslider_text (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on slider movement.
+function size_slider_Callback(hObject, eventdata, handles)
+% hObject    handle to size_slider (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+global size_threshold
+size_threshold = get(hObject, 'Value');
+set(handles.sizeslider_text, 'String', num2str(size_threshold));
+
+% --- Executes during object creation, after setting all properties.
+function size_slider_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to size_slider (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: slider controls usually have a light gray background.
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
+end
+
+
+% --- Executes on selection change in sizes_list.
+function sizes_list_Callback(hObject, eventdata, handles)
+% hObject    handle to sizes_list (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns sizes_list contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from sizes_list
+
+
+% --- Executes during object creation, after setting all properties.
+function sizes_list_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to sizes_list (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
 end

@@ -4,7 +4,7 @@ files = dir([folder '/*.csv']);
 filetype = 'dt';
 
 y_res = 180;
-x_res = 240;
+x_res = 240; % length of perch? Full res is 320 pix!
 x_length = 11.5; %cm
 
 speed_agg = zeros(1, numel(files));     
